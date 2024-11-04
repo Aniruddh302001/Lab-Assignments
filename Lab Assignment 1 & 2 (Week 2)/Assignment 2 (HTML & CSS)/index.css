@@ -1,0 +1,28 @@
+body {
+    background: #fdfdbb;
+}
+
+div {
+    border: 20px;
+}
+
+a {
+    color: #ff0000;
+    text-decoration: none;
+}
+
+h1 {
+    text-align: center;
+}
+
+.word {
+    color: #0000ff;
+}
+
+h5 {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+}

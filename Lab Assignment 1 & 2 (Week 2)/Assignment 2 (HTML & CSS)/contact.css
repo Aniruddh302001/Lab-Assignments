@@ -1,0 +1,20 @@
+body {
+    background: #fdfdbb;
+}
+
+a {
+    color: #ff0000;
+    text-decoration: none;
+}
+
+.word {
+    color: #0000ff;
+}
+
+h5 {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+}

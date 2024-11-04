@@ -1,0 +1,26 @@
+body {
+    background: #fdfdbb;
+}
+
+a {
+    color: #ff0000;
+    text-decoration: none;
+}
+
+th {
+    background-color: #259e3f;
+}
+
+td {
+    background-color: #000000;
+    color: #ffffff;
+    text-align: right;
+}
+
+h5 {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+}
