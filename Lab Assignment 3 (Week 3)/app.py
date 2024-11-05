@@ -1,147 +1,134 @@
-import csv
-import sys
 from jinja2 import Template
+import sys
+import pyhtml as h
 import matplotlib.pyplot as plt
+import csv
 
-# Dictionary
-students = {}
-courses = {}
-
-# Write to Dictionary
-def dict_update(dictionary_name, primary_id, candidate_id, marks):
-    if primary_id in dictionary_name.keys():
-        dictionary_name[primary_id][candidate_id] = marks
+def main():
+    fr = open('data.csv', 'r')
+    csvreader = csv.reader(fr)
+    header = next(csvreader)
+    rows = []
+    for row in csvreader:
+        rows.append(row)
+    if(len(sys.argv)>1):
+        if(sys.argv[1]=='-s'):
+            TEMPLATE = studentTemplate(header, rows)
+        elif(sys.argv[1]=='-c'):
+            TEMPLATE = courseTemplate(rows)
     else:
-        dictionary_name[primary_id] = {}
-        dictionary_name[primary_id][candidate_id] = marks
+        TEMPLATE = wrongTemplate()
+    template = TEMPLATE.render()
+    fw = open('output.html', 'w')
+    fw.write(template)
+    fw.close()
+    fr.close()
+
+def studentTemplate(header, rows):
+    # print('student')
+    stId = sys.argv[2]
+    value = 0
+    for row in rows:
+        if row[0] == stId:
+            value += int(row[2])
+    if(value == 0):
+        TEMPLATE = wrongTemplate()
+    else:
+        TEMPLATE = h.html(
+            h.head(
+                h.title('Student Data')
+            ),
+            h.body(
+                h.h1('Sudent Details'),
+                h.table(border='1')(
+                    h.tr(
+                        h.td(cell) for cell in header
+                    ),
+                    (h.tr(
+                        h.td(cell) for cell in row
+                    ) for row in rows if row[0] == stId
+                    )
+                    ,
+                    h.tr(
+                        h.td(colspan = '2')('Total Marks'),
+                        h.td(value)
+                    )
+                )
+            )
+        )
+    return TEMPLATE
 
 
-# Read CSV into Dictionary
-with open('data.csv', mode='r') as csv_file:
-    csv_reader = csv.DictReader(csv_file)
-    line_count = 0
-    for row in csv_reader:
-        if line_count >= 0:
-            dict_update(courses, int(row[' Course id']),
-                        int(row['Student id']), int(row[' Marks']))
-            dict_update(students, int(row['Student id']),
-                        int(row[' Course id']), int(row[' Marks']))
-
-        line_count += 1
-
-# Students HTMl Template
-students_template = '''
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
-  </head>
-  <body>
-    <h1 class="mainTitle">Student Details</h1>
-    <table border="1">
-      <tr>
-        <th>Student id</th>
-        <th>Course id</th>
-        <th>Marks</th>
-      </tr>
-      {% for sub_id, marks in students_details %}
-      <tr>
-          <td>{{ student_id }}</td>
-          <td>{{ sub_id }}</td>
-          <td>{{ marks }}</td>
-      </tr>
-      {% endfor %}
-      <tr>
-        <td colspan="2" style="text-align: center">Total Marks</td>
-        <td>{{ total_marks }}</td>
-      </tr>
-    </table>
-  </body>
-</html>
-'''
-
-# Course HTML Template
-courses_template = '''
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>IIT Madras</title>
-  </head>
-  <body>
-    <h1 class="mainTitle">Course Details</h1>
-    <table border="1">
-      <tr>
-        <td>Average Marks</td>
-        <td>Maximum Marks</td>
-      </tr>
-      <tr>
-        <td>{{ avg_marks }}</td>
-        <td>{{ max_marks }}</td>
-      </tr>
-    </table>
-    <img src="course_histogram.png" alt="course_histogram" />
-  </body>
-</html>
-'''
-
-# Error HTML Template
-error_template = '''
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>IIT Madras</title>
-  </head>
-  <body>
-    <h1 class="mainTitle">Wrong Inputs</h1>
-    <p class="body">Something went wrong</p>
-  </body>
-</html>
-'''
-
-# Render Arguments.
-arg_option = sys.argv[1]
-arg_id = int(sys.argv[2])
-
-try:
-
-    if arg_option == '-c':
-
-        # Generate Histogram
-        plt.hist(courses[arg_id].values(), bins=10)
+def courseTemplate(rows):
+    # print('course')
+    cId = sys.argv[2]
+    # print(cId)
+    value = 0
+    max = 0
+    data = {}
+    for row in rows:
+        # print(row[1],cId,row[1] == cId)
+        if int(row[1]) == int(cId):
+            i = int(row[2])
+            # value += [i]
+            # print(i not in data.keys())
+            # print(i in data.keys())
+            if (i not in data.keys()):
+                data[i] = 1
+            else:
+                data[i] += 1
+            # print(i)
+            value += i
+            if (i > max):
+                max = i
+    avg = value / len(rows)
+    if (value == 0):
+        TEMPLATE = wrongTemplate()
+    else:
+        # data = {'C': 20, 'C++': 15, 'Java': 30, 'Python': 35}
+        course = list(data.keys())
+        values = list(data.values())
+        fig = plt.figure(figsize = (10, 5))
+        # creating the bar plot
+        plt.bar(course, values)
         plt.xlabel("Marks")
         plt.ylabel("Frequency")
-        plt.savefig('course_histogram.png')
+        # plt.title("Students enrolled in different courses")
+        # plt.show()
+        fig.savefig('my_plot.png')
+        # Show plot
+        # plt.show()
+        TEMPLATE = h.html(
+            h.head(
+                h.title("Course Data")
+            ),
+            h.body(
+                h.h1("Course Details"),
+                h.table(border = '1')(
+                    h.tr(
+                        h.td('Average Marks'),
+                        h.td('Maximum Marks')
+                    ),
+                    h.tr(
+                        h.td(avg),
+                        h.td(max)
+                    )
+                ),
+                h.img(src = 'my_plot.png')
+            )
+        )
+    return TEMPLATE
 
-        # Generate HTML
-        template = Template(courses_template)
-        html_out = template.render(avg_marks=((sum(courses[arg_id].values(
-        )))/len(courses[arg_id].values())), max_marks=max(courses[arg_id].values()))
-        html_outfile = open('output.html', 'w')
-        html_outfile.write(html_out)
-        html_outfile.close()
+def wrongTemplate():
+    return h.html(
+        h.head(
+            h.title('Something Went Wrong')
+        ),
+        h.body(
+            h.h1('Wrong Inputs'),
+            h.p('Something went wrong')
+        )
+    )
 
-    elif arg_option == '-s':
-
-        # Generate HTML
-        template = Template(students_template)
-        html_out = template.render(
-            students_details=students[arg_id].items(), student_id=arg_id, total_marks=sum(students[arg_id].values()))
-        html_outfile = open('output.html', 'w')
-        html_outfile.write(html_out)
-        html_outfile.close()
-
-except:
-
-    # Generate HTML
-    html_outfile = open('output.html', 'w')
-    html_outfile.write(error_template)
-    html_outfile.close()
+if __name__ == '__main__':
+    main()
